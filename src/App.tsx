@@ -13,9 +13,13 @@ import { Footer } from './components/layout/Footer';
 
 // Page Components
 import { Hero } from './components/home/Hero';
+import { GarmentMarquee } from './components/home/GarmentMarquee';
 import { ServicesTabs } from './components/home/ServicesTabs';
-import { FeatureStats } from './components/home/FeatureStats';
 import { ProcessShowcase } from './components/home/ProcessShowcase';
+import { FeatureStats } from './components/home/FeatureStats';
+import { Testimonials } from './components/home/Testimonials';
+import { FaqSection } from './components/home/FaqSection';
+import { AppPromo } from './components/home/AppPromo';
 import { BookingFlow } from './components/booking/BookingFlow';
 import { TrackingDashboard } from './components/tracking/TrackingDashboard';
 import { AdminDashboard } from './components/admin/AdminDashboard';
@@ -68,14 +72,16 @@ export default function App() {
             >
               <Hero setView={setView} />
               
+              <GarmentMarquee />
+              
               {/* Floating Quote Simulation on Home */}
-              <section className="px-6 max-w-4xl mx-auto -mt-24 relative z-30">
-                <div className="bg-white p-8 rounded-[40px] shadow-2xl border border-gray-100 grid md:grid-cols-3 gap-8 group hover:shadow-blue-200/50 transition-all duration-500">
+              <section className="px-4 sm:px-6 max-w-4xl mx-auto -mt-10 md:-mt-20 relative z-30">
+                <div className="bg-white p-6 md:p-8 rounded-[32px] md:rounded-[40px] shadow-2xl border border-gray-100 grid md:grid-cols-3 gap-6 md:gap-8 group hover:shadow-blue-200/50 transition-all duration-500">
                   <div className="md:col-span-2 space-y-4">
-                    <h3 className="text-2xl font-black flex items-center gap-2 text-black">
+                    <h3 className="text-xl md:text-2xl font-black flex items-center gap-2 text-black">
                        INSTANT QUOTE
                     </h3>
-                    <p className="text-sm text-gray-400 font-bold uppercase tracking-widest">Select a garment to see pricing</p>
+                    <p className="text-xs text-gray-400 font-bold uppercase tracking-widest">Select a garment to see pricing</p>
                     <div className="flex flex-wrap gap-2 pt-2">
                       {['Shirt', 'Suit', 'Saree', 'Curtain', 'Jeans'].map(item => (
                         <button 
@@ -90,7 +96,7 @@ export default function App() {
                   </div>
                   <div className="bg-srm-blue rounded-3xl p-6 text-white text-center flex flex-col justify-center gap-2 border-4 border-blue-400/50">
                      <p className="text-[10px] uppercase tracking-widest font-black opacity-80">Premium Care</p>
-                     <p className="text-5xl font-black tracking-tighter">₹30<span className="text-sm">/pc</span></p>
+                     <p className="text-4xl md:text-5xl font-black tracking-tighter">₹30<span className="text-sm">/pc</span></p>
                      <p className="text-[8px] font-bold opacity-60">MINIMUM ORDER 10PCS</p>
                   </div>
                 </div>
@@ -103,6 +109,9 @@ export default function App() {
               />
               <ProcessShowcase />
               <FeatureStats />
+              <Testimonials />
+              <AppPromo />
+              <FaqSection />
             </motion.div>
           )}
 

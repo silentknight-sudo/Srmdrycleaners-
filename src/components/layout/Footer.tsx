@@ -28,11 +28,13 @@ export function Footer({ makeAdmin, setView }: FooterProps) {
                 className="flex items-center gap-3 cursor-pointer group"
                 onClick={handleLogoClick}
               >
-                 <img 
-                   src={srmLogo} 
-                   alt="SRM Dry Cleaners Logo" 
-                   className="h-14 w-auto brightness-0 invert opacity-90 transition-all group-hover:scale-105" 
-                 />
+                 <div className="bg-white px-3 py-2 rounded-xl flex items-center justify-center shadow-lg border border-white/10">
+                   <img 
+                     src={srmLogo} 
+                     alt="SRM Dry Cleaners Logo" 
+                     className="h-10 w-auto object-contain transition-all group-hover:scale-105" 
+                   />
+                 </div>
               </div>
               <p className="text-gray-400 font-medium leading-relaxed max-w-xs">
                  Redefining garment care in Noida with advanced German processing technology and white-glove pickup logistics.
