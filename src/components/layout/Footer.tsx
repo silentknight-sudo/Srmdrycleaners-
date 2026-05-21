@@ -28,13 +28,11 @@ export function Footer({ makeAdmin, setView }: FooterProps) {
                 className="flex items-center gap-3 cursor-pointer group"
                 onClick={handleLogoClick}
               >
-                 <div className="bg-white px-3 py-2 rounded-xl flex items-center justify-center shadow-lg border border-white/10">
-                   <img 
-                     src={srmLogo} 
-                     alt="SRM Dry Cleaners Logo" 
-                     className="h-10 w-auto object-contain transition-all group-hover:scale-105" 
-                   />
-                 </div>
+                <img 
+                  src={srmLogo} 
+                  alt="SRM Dry Cleaners Logo" 
+                  className="h-12 w-auto object-contain transition-all group-hover:scale-105" 
+                />
               </div>
               <p className="text-gray-400 font-medium leading-relaxed max-w-xs">
                  Redefining garment care in Noida with advanced German processing technology and white-glove pickup logistics.
@@ -49,9 +47,23 @@ export function Footer({ makeAdmin, setView }: FooterProps) {
            <div className="space-y-8">
               <h4 className="text-xs font-black uppercase tracking-[0.2em] text-blue-400">CONTACT HUB</h4>
               <div className="space-y-6">
-                 <ContactItem icon={<Phone size={18} />} title="Priority Line" desc="+91 99908 44437" />
-                 <ContactItem icon={<Mail size={18} />} title="Official Support" desc="care@srmcleaners.in" />
-                 <ContactItem icon={<Clock size={18} />} title="Operations" desc="Mon - Sun | 9AM - 8PM" />
+                 <ContactItem 
+                   icon={<Phone size={18} />} 
+                   title="Priority Line" 
+                   desc="+91 99908 44437" 
+                   href="tel:+919990844437"
+                 />
+                 <ContactItem 
+                   icon={<Mail size={18} />} 
+                   title="Official Support" 
+                   desc="care@srmcleaners.in" 
+                   href="mailto:care@srmcleaners.in"
+                 />
+                 <ContactItem 
+                   icon={<Clock size={18} />} 
+                   title="Operations" 
+                   desc="Mon - Sun | 9AM - 8PM" 
+                 />
               </div>
            </div>
 
@@ -118,16 +130,26 @@ function SocialIcon({ icon }: { icon: any }) {
   );
 }
 
-function ContactItem({ icon, title, desc }: any) {
-  return (
+function ContactItem({ icon, title, desc, href }: any) {
+  const content = (
     <div className="flex items-center gap-4">
-       <div className="text-gray-600">{icon}</div>
+       <div className="text-blue-400 group-hover:scale-110 transition-transform">{icon}</div>
        <div>
           <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest">{title}</p>
-          <p className="text-sm font-bold">{desc}</p>
+          <p className="text-sm font-bold group-hover:text-blue-400 transition-colors">{desc}</p>
        </div>
     </div>
   );
+
+  if (href) {
+    return (
+      <a href={href} target={href.startsWith('http') ? '_blank' : undefined} rel={href.startsWith('http') ? 'noopener noreferrer' : undefined} className="block group transition-all">
+        {content}
+      </a>
+    );
+  }
+
+  return content;
 }
 
 function FooterLink({ label, onClick }: { label: string, onClick?: () => void }) {

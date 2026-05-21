@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, Phone, MessageSquare } from 'lucide-react';
 import { useAuth } from '../../lib/AuthContext';
 import { signInWithGoogle } from '../../lib/firebase';
 import { Button } from '../ui/button';
@@ -85,7 +85,25 @@ export function Navbar({ setView, activeView }: NavbarProps) {
           ))}
         </nav>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3 md:gap-4 animate-fade-in">
+          <a
+            href="https://wa.me/919990844437?text=Hi%20SRM%20Dry%20Cleaners,%20I'd%20like%20to%20get%20in%20touch!"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-emerald-200/60 bg-emerald-50 text-emerald-700 text-xs font-black uppercase tracking-wider hover:bg-emerald-100 transition-all shadow-sm cursor-pointer"
+          >
+            <MessageSquare size={13} className="fill-current text-emerald-500" />
+            <span>WhatsApp</span>
+          </a>
+
+          <a
+            href="tel:+919990844437"
+            className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-blue-200/60 bg-blue-50 text-srm-blue text-xs font-black uppercase tracking-wider hover:bg-blue-100 transition-all shadow-sm cursor-pointer"
+          >
+            <Phone size={12} className="fill-current" />
+            <span>Call +91 99908 44437</span>
+          </a>
+
           {user ? (
             <div className="flex items-center gap-3 bg-white/50 p-1 pr-4 rounded-full border border-gray-100">
               <img 

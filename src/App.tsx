@@ -23,6 +23,7 @@ import { AppPromo } from './components/home/AppPromo';
 import { BookingFlow } from './components/booking/BookingFlow';
 import { TrackingDashboard } from './components/tracking/TrackingDashboard';
 import { AdminDashboard } from './components/admin/AdminDashboard';
+import { FloatingContact } from './components/ui/FloatingContact';
 
 export default function App() {
   const { user, loading, isAdmin } = useAuth();
@@ -122,6 +123,7 @@ export default function App() {
       </main>
 
       <Footer makeAdmin={makeAdmin} setView={setView} />
+      <FloatingContact />
     </div>
   );
 }
