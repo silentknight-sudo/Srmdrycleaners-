@@ -16,14 +16,14 @@ export function ProcessShowcase() {
       title: "Expert Care",
       desc: "Using bio-degradable solvents and gentle steam technology for lasting freshness.",
       icon: <Sparkles size={32} />,
-      img: "/src/assets/images/laundry_expert_care_1779214369056.png",
+      img: "/images/laundry_expert_care_1779214369056.png",
       color: "bg-rose-500"
     },
     {
       title: "Swift Delivery",
       desc: "Packaged in premium reusable covers and delivered to your doorstep at your convenience.",
       icon: <Truck size={32} />,
-      img: "/src/assets/images/swift_laundry_delivery_1779214555154.png",
+      img: "/images/swift_laundry_delivery_1779214555154.png",
       color: "bg-slate-900"
     }
   ];

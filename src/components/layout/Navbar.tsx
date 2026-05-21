@@ -54,7 +54,7 @@ export function Navbar({ setView, activeView }: NavbarProps) {
           onClick={() => setView('home')}
         >
           <img 
-            src="/src/assets/images/srm_logo_cleaned_1779214849760.png" 
+            src="/images/srm_logo_cleaned_1779214849760.png" 
             alt="SRM Dry Cleaners" 
             className="h-12 w-auto group-hover:scale-105 transition-transform" 
           />

@@ -95,7 +95,7 @@ export function Hero({ setView }: HeroProps) {
           <TiltCard className="relative z-10 cursor-pointer">
             <div className="absolute -inset-4 bg-gradient-to-tr from-srm-blue/20 to-rose-500/20 blur-3xl opacity-50 -z-10" />
             <img 
-              src="/src/assets/images/srm_dry_cleaners_hero_1779214140847.png" 
+              src="/images/srm_dry_cleaners_hero_1779214140847.png" 
               alt="Premium Laundry" 
               className="rounded-[40px] shadow-2xl w-full aspect-[4/5] object-cover ring-8 ring-white/50 backdrop-blur-sm"
             />
