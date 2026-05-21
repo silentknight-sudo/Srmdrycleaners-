@@ -1,13 +1,22 @@
 import React from 'react';
-import { WashingMachine, Phone, Mail, Instagram, Facebook, Twitter, Globe, Clock, ShieldCheck } from 'lucide-react';
+import { Phone, Mail, Instagram, Facebook, Twitter, Globe, Clock, ShieldCheck } from 'lucide-react';
 import { Button } from '../ui/button';
+import srmLogo from '../../assets/images/srm_logo_cleaned_1779214849760.png';
 
 interface FooterProps {
   makeAdmin: () => void;
+  setView?: (view: 'home' | 'book' | 'tracking' | 'admin') => void;
 }
 
-export function Footer({ makeAdmin }: FooterProps) {
+export function Footer({ makeAdmin, setView }: FooterProps) {
   const currentYear = new Date().getFullYear();
+
+  const handleLogoClick = () => {
+    if (setView) {
+      setView('home');
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   return (
     <footer className="bg-srm-navy text-white pt-32 pb-12 px-6">
@@ -15,11 +24,15 @@ export function Footer({ makeAdmin }: FooterProps) {
         {/* Top Info Bar */}
         <div className="grid md:grid-cols-3 gap-12 border-b border-white/5 pb-24">
            <div className="space-y-6">
-              <div className="flex items-center gap-3">
-                 <div className="w-12 h-12 srm-gradient rounded-2xl flex items-center justify-center">
-                    <WashingMachine size={24} />
-                 </div>
-                 <span className="text-2xl font-black tracking-tighter">SRM CLEANERS</span>
+              <div 
+                className="flex items-center gap-3 cursor-pointer group"
+                onClick={handleLogoClick}
+              >
+                 <img 
+                   src={srmLogo} 
+                   alt="SRM Dry Cleaners Logo" 
+                   className="h-14 w-auto brightness-0 invert opacity-90 transition-all group-hover:scale-105" 
+                 />
               </div>
               <p className="text-gray-400 font-medium leading-relaxed max-w-xs">
                  Redefining garment care in Noida with advanced German processing technology and white-glove pickup logistics.

@@ -112,7 +112,7 @@ export default function App() {
         </AnimatePresence>
       </main>
 
-      <Footer makeAdmin={makeAdmin} />
+      <Footer makeAdmin={makeAdmin} setView={setView} />
     </div>
   );
 }
