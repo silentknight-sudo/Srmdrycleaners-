@@ -1,0 +1,71 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile information",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "role": { "type": "string", "enum": ["admin", "user"] },
+        "phone": { "type": "string" },
+        "address": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "role"]
+    },
+    "Order": {
+      "title": "Order",
+      "description": "Order details and status",
+      "type": "object",
+      "properties": {
+        "orderId": { "type": "string" },
+        "userId": { "type": "string" },
+        "customerName": { "type": "string" },
+        "customerPhone": { "type": "string" },
+        "items": { "type": "array" },
+        "totalAmount": { "type": "number" },
+        "status": { "type": "string", "enum": ["pending", "picked", "processing", "out_for_delivery", "delivered", "cancelled"] },
+        "paymentStatus": { "type": "string", "enum": ["unpaid", "paid"] },
+        "pickupDate": { "type": "string" },
+        "pickupSlot": { "type": "string" },
+        "address": { "type": "string" },
+        "location": { "type": "string", "enum": ["Noida", "Greater Noida"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" },
+        "invoiceUrl": { "type": "string" }
+      },
+      "required": ["userId", "items", "status", "totalAmount"]
+    },
+    "Service": {
+      "title": "Service",
+      "description": "Service categories and pricing",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "category": { "type": "string" },
+        "name": { "type": "string" },
+        "washIron": { "type": "number" },
+        "dryClean": { "type": "number" },
+        "steamIron": { "type": "number" }
+      },
+      "required": ["category", "name"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "Collection of users"
+    },
+    "/orders/{orderId}": {
+      "schema": "Order",
+      "description": "Collection of orders"
+    },
+    "/services/{serviceId}": {
+      "schema": "Service",
+      "description": "Collection of services and rates"
+    }
+  }
+}

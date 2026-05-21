@@ -1,0 +1,6 @@
+{
+  "name": "SRM Drycleaners",
+  "description": "Professional dry cleaning and laundry services in Noida and Greater Noida. Schedule pickups, track orders real-time, and manage invoices online.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
