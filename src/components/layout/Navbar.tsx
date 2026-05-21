@@ -5,6 +5,7 @@ import { useAuth } from '../../lib/AuthContext';
 import { signInWithGoogle } from '../../lib/firebase';
 import { Button } from '../ui/button';
 import { cn } from '../../lib/utils';
+import srmLogo from '../../assets/images/srm_logo_cleaned_1779214849760.png';
 
 interface NavbarProps {
   setView: (view: 'home' | 'book' | 'tracking' | 'admin') => void;
@@ -54,7 +55,7 @@ export function Navbar({ setView, activeView }: NavbarProps) {
           onClick={() => setView('home')}
         >
           <img 
-            src="/images/srm_logo_cleaned_1779214849760.png" 
+            src={srmLogo} 
             alt="SRM Dry Cleaners" 
             className="h-12 w-auto group-hover:scale-105 transition-transform" 
           />

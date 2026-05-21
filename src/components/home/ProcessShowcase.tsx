@@ -2,6 +2,8 @@ import React from 'react';
 import { motion } from 'motion/react';
 import { TiltCard } from '../ui/TiltCard';
 import { ShieldCheck, Truck, Sparkles } from 'lucide-react';
+import expertCareImg from '../../assets/images/laundry_expert_care_1779214369056.png';
+import swiftDeliveryImg from '../../assets/images/swift_laundry_delivery_1779214555154.png';
 
 export function ProcessShowcase() {
   const steps = [
@@ -16,14 +18,14 @@ export function ProcessShowcase() {
       title: "Expert Care",
       desc: "Using bio-degradable solvents and gentle steam technology for lasting freshness.",
       icon: <Sparkles size={32} />,
-      img: "/images/laundry_expert_care_1779214369056.png",
+      img: expertCareImg,
       color: "bg-rose-500"
     },
     {
       title: "Swift Delivery",
       desc: "Packaged in premium reusable covers and delivered to your doorstep at your convenience.",
       icon: <Truck size={32} />,
-      img: "/images/swift_laundry_delivery_1779214555154.png",
+      img: swiftDeliveryImg,
       color: "bg-slate-900"
     }
   ];
