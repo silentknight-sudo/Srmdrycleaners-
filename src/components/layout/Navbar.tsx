@@ -16,6 +16,7 @@ export function Navbar({ setView, activeView }: NavbarProps) {
   const { user, profile, isAdmin } = useAuth();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isContactDropdownOpen, setIsContactDropdownOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
@@ -85,24 +86,92 @@ export function Navbar({ setView, activeView }: NavbarProps) {
           ))}
         </nav>
 
-        <div className="flex items-center gap-3 md:gap-4 animate-fade-in">
-          <a
-            href="https://wa.me/919990844437?text=Hi%20SRM%20Dry%20Cleaners,%20I'd%20like%20to%20get%20in%20touch!"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-emerald-200/60 bg-emerald-50 text-emerald-700 text-xs font-black uppercase tracking-wider hover:bg-emerald-100 transition-all shadow-sm cursor-pointer"
-          >
-            <MessageSquare size={13} className="fill-current text-emerald-500" />
-            <span>WhatsApp</span>
-          </a>
+        <div className="flex items-center gap-3 md:gap-4 animate-fade-in relative">
+          
+          {/* Multi-Store Contact Popover */}
+          <div className="relative">
+            <button
+              onClick={() => setIsContactDropdownOpen(!isContactDropdownOpen)}
+              className="hidden sm:flex items-center gap-1.5 px-4 py-2 rounded-full border border-blue-200/60 bg-blue-50 text-srm-blue text-xs font-black uppercase tracking-wider hover:bg-blue-100 transition-all shadow-sm cursor-pointer select-none"
+            >
+              <Phone size={12} className="fill-current text-srm-blue animate-pulse" />
+              <span>Our Stores & Contacts</span>
+            </button>
 
-          <a
-            href="tel:+919990844437"
-            className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-blue-200/60 bg-blue-50 text-srm-blue text-xs font-black uppercase tracking-wider hover:bg-blue-100 transition-all shadow-sm cursor-pointer"
-          >
-            <Phone size={12} className="fill-current" />
-            <span>Call +91 99908 44437</span>
-          </a>
+            <AnimatePresence>
+              {isContactDropdownOpen && (
+                <>
+                  {/* Backdrop underlay to close */}
+                  <div 
+                    className="fixed inset-0 z-40 bg-transparent" 
+                    onClick={() => setIsContactDropdownOpen(false)}
+                  />
+                  
+                  <motion.div
+                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                    className="absolute right-0 mt-3 w-80 bg-white rounded-3xl border border-gray-100 shadow-2xl p-6 z-50 space-y-4"
+                  >
+                    <div className="space-y-1">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">SRM Store Outlets</p>
+                      <h4 className="text-md font-black text-gray-900 leading-none">Select branch destination</h4>
+                    </div>
+                    
+                    <div className="h-px bg-gray-50 -mx-6" />
+
+                    <div className="space-y-4">
+                      {/* Store 1 */}
+                      <div className="space-y-2 text-left">
+                        <p className="text-[10px] font-black text-srm-blue uppercase tracking-wider">Noida Sec-78 (Mahagun Mart)</p>
+                        <div className="flex gap-2">
+                          <a 
+                            href="tel:+919891318340" 
+                            className="flex-grow py-2 px-3 text-center bg-gray-50 hover:bg-blue-50 hover:text-srm-blue border border-gray-100 rounded-xl text-[11px] font-black tracking-tighter transition-colors block"
+                          >
+                            Call 9891318340
+                          </a>
+                          <a 
+                            href="https://wa.me/919891318340?text=Hi%20SRM%20Sec%2078"
+                            target="_blank"
+                            rel="noopener noreferrer" 
+                            className="w-10 h-10 flex items-center justify-center bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border border-emerald-100 rounded-xl transition-colors shrink-0"
+                          >
+                            <MessageSquare size={14} className="fill-current text-emerald-500" />
+                          </a>
+                        </div>
+                        <p className="text-[10px] text-gray-400 font-bold leading-tight">Shop No. E, LG Floor, Mahagun Mart, Sec-78 Noida</p>
+                      </div>
+
+                      <div className="h-px bg-gray-50 -mx-6" />
+
+                      {/* Store 2 */}
+                      <div className="space-y-2 text-left">
+                        <p className="text-[10px] font-black text-srm-red uppercase tracking-wider">Greater Noida Sec-1 (Paramount)</p>
+                        <div className="flex gap-2">
+                          <a 
+                            href="tel:+919560208341" 
+                            className="flex-grow py-2 px-3 text-center bg-gray-50 hover:bg-rose-50 hover:text-srm-red border border-gray-100 rounded-xl text-[11px] font-black tracking-tighter transition-colors block"
+                          >
+                            Call 9560208341
+                          </a>
+                          <a 
+                            href="https://wa.me/919560208341?text=Hi%20SRM%20Paramount"
+                            target="_blank"
+                            rel="noopener noreferrer" 
+                            className="w-10 h-10 flex items-center justify-center bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border border-emerald-100 rounded-xl transition-colors shrink-0"
+                          >
+                            <MessageSquare size={14} className="fill-current text-emerald-500" />
+                          </a>
+                        </div>
+                        <p className="text-[10px] text-gray-400 font-bold leading-tight">FF8A, Paramount City Square, Sector-1, Bisrakh</p>
+                      </div>
+                    </div>
+                  </motion.div>
+                </>
+              )}
+            </AnimatePresence>
+          </div>
 
           {user ? (
             <div className="flex items-center gap-3 bg-white/50 p-1 pr-4 rounded-full border border-gray-100">
@@ -142,7 +211,7 @@ export function Navbar({ setView, activeView }: NavbarProps) {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="absolute top-20 left-0 right-0 bg-white border-b border-gray-100 p-6 flex flex-col gap-4 md:hidden shadow-xl"
+            className="absolute top-20 left-0 right-0 bg-white border-b border-gray-100 p-6 flex flex-col gap-4 md:hidden shadow-xl max-h-[85vh] overflow-y-auto"
           >
             {navLinks.filter(l => (!l.auth || user) && (!l.admin || isAdmin)).map((link) => (
               <button
@@ -153,6 +222,31 @@ export function Navbar({ setView, activeView }: NavbarProps) {
                 {link.label}
               </button>
             ))}
+
+            {/* Mobile Contact Shortcuts */}
+            <div className="mt-4 pt-4 border-t border-gray-100 space-y-4">
+               <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Our Outlets & Dialers</p>
+               
+               <div className="space-y-3">
+                  <div className="p-4 bg-blue-50/50 rounded-2xl border border-blue-100 text-left">
+                     <p className="text-xs font-black text-srm-blue uppercase">Noida Sector 78 Outlet</p>
+                     <p className="text-[10px] text-gray-400 font-bold leading-snug mt-0.5">Mahagun Mart, Sec-78 Noida</p>
+                     <div className="flex gap-2 mt-2.5">
+                        <a href="tel:+919891318340" className="flex-1 py-1.5 text-center bg-white border border-blue-200 text-[10px] font-black uppercase tracking-wider text-srm-blue rounded-xl block">9891318340</a>
+                        <a href="tel:+919717153137" className="flex-1 py-1.5 text-center bg-white border border-blue-200 text-[10px] font-black uppercase tracking-wider text-srm-blue rounded-xl block">9717153137</a>
+                     </div>
+                  </div>
+
+                  <div className="p-4 bg-rose-50/50 rounded-2xl border border-rose-100 text-left">
+                     <p className="text-xs font-black text-srm-red uppercase">Greater Noida Sector-1 Outlet</p>
+                     <p className="text-[10px] text-gray-400 font-bold leading-snug mt-0.5">Paramount City Square, Sec-1</p>
+                     <div className="flex gap-2 mt-2.5">
+                        <a href="tel:+919560208341" className="flex-1 py-1.5 text-center bg-white border border-rose-200 text-[10px] font-black uppercase tracking-wider text-srm-red rounded-xl block">9560208341</a>
+                        <a href="tel:+919560408342" className="flex-1 py-1.5 text-center bg-white border border-rose-200 text-[10px] font-black uppercase tracking-wider text-srm-red rounded-xl block">9560408342</a>
+                     </div>
+                  </div>
+               </div>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

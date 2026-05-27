@@ -24,11 +24,13 @@ import { BookingFlow } from './components/booking/BookingFlow';
 import { TrackingDashboard } from './components/tracking/TrackingDashboard';
 import { AdminDashboard } from './components/admin/AdminDashboard';
 import { FloatingContact } from './components/ui/FloatingContact';
+import { InfoModal } from './components/ui/InfoModal';
 
 export default function App() {
   const { user, loading, isAdmin } = useAuth();
   const [view, setView] = useState<'home' | 'book' | 'tracking' | 'admin'>('home');
   const [selectedCategory, setSelectedCategory] = useState<string>('Mens Wear');
+  const [activeModal, setActiveModal] = useState<'video' | 'history' | 'workshops' | 'franchise' | 'careers' | 'terms' | 'privacy' | null>(null);
 
   const makeAdmin = async () => {
     if (!user) {
@@ -71,7 +73,7 @@ export default function App() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
             >
-              <Hero setView={setView} />
+              <Hero setView={setView} onOpenVideoModal={() => setActiveModal('video')} />
               
               <GarmentMarquee />
               
@@ -122,8 +124,14 @@ export default function App() {
         </AnimatePresence>
       </main>
 
-      <Footer makeAdmin={makeAdmin} setView={setView} />
+      <Footer makeAdmin={makeAdmin} setView={setView} onOpenModal={(type) => setActiveModal(type)} />
       <FloatingContact />
+
+      <AnimatePresence>
+        {activeModal && (
+          <InfoModal type={activeModal} onClose={() => setActiveModal(null)} />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

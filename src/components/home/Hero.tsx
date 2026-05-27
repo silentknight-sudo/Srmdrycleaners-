@@ -9,9 +9,10 @@ import ecoFabricCare from '../../assets/images/eco_fabric_care.png';
 
 interface HeroProps {
   setView: (view: any) => void;
+  onOpenVideoModal: () => void;
 }
 
-export function Hero({ setView }: HeroProps) {
+export function Hero({ setView, onOpenVideoModal }: HeroProps) {
   const [currentSlide, setCurrentSlide] = useState(0);
 
   const slides = [
@@ -209,7 +210,11 @@ export function Hero({ setView }: HeroProps) {
                   <motion.div 
                      animate={{ scale: [1, 1.05, 1] }}
                      transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
-                     className="absolute left-6 bottom-6 bg-srm-blue p-1 rounded-full shadow-2xl z-20 text-white"
+                     onClick={(e) => {
+                       e.stopPropagation();
+                       onOpenVideoModal();
+                     }}
+                     className="absolute left-6 bottom-6 bg-srm-blue p-1 rounded-full shadow-2xl z-20 text-white cursor-pointer hover:bg-blue-600 transition-all hover:scale-110 active:scale-90"
                   >
                     <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center backdrop-blur-md">
                       <Play fill="white" size={18} className="ml-0.5 text-white" />

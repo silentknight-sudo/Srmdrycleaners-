@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ShoppingBag, Truck, CheckCircle, ArrowLeft, ArrowRight, Trash2, MapPin, Calendar, Clock, CreditCard } from 'lucide-react';
+import { ShoppingBag, Truck, CheckCircle, ArrowLeft, ArrowRight, Trash2, MapPin, Calendar, Clock, CreditCard, Search } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
@@ -9,11 +9,19 @@ import { Separator } from '../ui/separator';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { PRICING_DATA, ServiceItem } from '../../constants';
+import { ServiceSymbol } from '../ServiceSymbol';
 import { useAuth } from '../../lib/AuthContext';
 import { signInWithGoogle, db } from '../../lib/firebase';
-import { collection, addDoc } from 'firebase/firestore';
+import { collection, addDoc, query, onSnapshot } from 'firebase/firestore';
 import { cn } from '../../lib/utils';
 import { ScrollArea } from '../ui/scroll-area';
+
+const formatPrice = (price: any) => {
+  if (!price) return '';
+  if (typeof price === 'number') return `₹${price}`;
+  if (price.toString().includes('₹') || price.toString().toLowerCase().includes('contact') || price.toString().toLowerCase().includes('custom')) return price;
+  return `₹${price}`;
+};
 
 interface BookingFlowProps {
   setView: (view: any) => void;
@@ -24,6 +32,9 @@ export function BookingFlow({ setView }: BookingFlowProps) {
   const { user } = useAuth();
   const [step, setStep] = useState(1);
   const [basket, setBasket] = useState<any[]>([]);
+  const [selectedType, setSelectedType] = useState<string>('All');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [dbServices, setDbServices] = useState<any[]>([]);
   const [details, setDetails] = useState({
     location: 'Noida',
     pickupDate: format(new Date(), 'yyyy-MM-dd'),
@@ -32,9 +43,42 @@ export function BookingFlow({ setView }: BookingFlowProps) {
     phone: '',
   });
 
+  useEffect(() => {
+    const q = query(collection(db, 'services'));
+    const unsub = onSnapshot(q, (snap) => {
+      if (!snap.empty) {
+        setDbServices(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      }
+    }, (error) => {
+      console.error("Booking dynamic services fetch error:", error);
+    });
+    return () => unsub();
+  }, []);
+
+  const mergedPricingData = useMemo(() => {
+    if (dbServices.length === 0) return PRICING_DATA;
+    return PRICING_DATA.map(original => {
+      const dbItem = dbServices.find(item => item.id === original.id);
+      if (dbItem) {
+        return {
+          ...original,
+          ...dbItem
+        };
+      }
+      return original;
+    });
+  }, [dbServices, dbServices.length]);
+
   const addToBasket = (item: ServiceItem, type: 'washIron' | 'dryClean' | 'steamIron') => {
-    const price = item[type] || 0;
-    setBasket([...basket, { ...item, type, price, basketId: Math.random().toString(36).substr(2, 9) }]);
+    const rawPrice = item[type];
+    let price = 0;
+    if (typeof rawPrice === 'number') {
+      price = rawPrice;
+    } else if (typeof rawPrice === 'string') {
+      const match = rawPrice.match(/\d+/);
+      price = match ? parseInt(match[0], 10) : 0;
+    }
+    setBasket([...basket, { ...item, type, price, basketId: Math.random().toString(36).substr(2, 9), displayPrice: rawPrice }]);
   };
 
   const removeFromBasket = (basketId: string) => {
@@ -109,45 +153,116 @@ export function BookingFlow({ setView }: BookingFlowProps) {
             exit={{ opacity: 0, y: -20 }}
             className="grid lg:grid-cols-12 gap-12"
           >
-            <div className="lg:col-span-8 space-y-8">
-               <div className="flex items-center justify-between">
-                  <h3 className="text-2xl font-bold">Choose Garments</h3>
-                  <div className="flex gap-2">
-                     <Button variant="ghost" size="sm" className="bg-gray-50 text-[10px] font-bold uppercase tracking-widest px-4 rounded-xl">Mens</Button>
-                     <Button variant="ghost" size="sm" className="text-[10px] font-bold uppercase tracking-widest px-4 rounded-xl">Womens</Button>
+            <div className="lg:col-span-8 space-y-6">
+               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div>
+                    <h3 className="text-2xl font-black tracking-tight text-gray-900">Choose Garments</h3>
+                    <p className="text-xs font-medium text-gray-400">All services are listed alphabetically A-Z</p>
                   </div>
+                  
+                  {/* Elegant Search Input */}
+                  <div className="relative w-full md:w-64">
+                     <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                     <Input 
+                       type="text" 
+                       placeholder="Search garment..." 
+                       value={searchQuery}
+                       onChange={(e) => setSearchQuery(e.target.value)}
+                       className="pl-10 h-10 rounded-2xl border-gray-200 text-sm focus:ring-srm-blue"
+                     />
+                  </div>
+               </div>
+
+               {/* Responsive Filter Ribbons */}
+               <div className="flex flex-wrap gap-1.5 p-1 bg-gray-100/50 rounded-2xl border border-gray-200/45 w-fit">
+                  {['All', 'Mens Wear', 'Womens Wear', 'Household & Kidswear', 'Other'].map(cat => {
+                    const label = cat === 'Household & Kidswear' ? 'Household' : cat === 'Mens Wear' ? 'Mens' : cat === 'Womens Wear' ? 'Womens' : cat;
+                    return (
+                      <button
+                        key={cat}
+                        onClick={() => setSelectedType(cat)}
+                        className={cn(
+                          "px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-xl transition-all duration-200",
+                          selectedType === cat 
+                            ? "bg-white text-srm-blue shadow-md font-extrabold" 
+                            : "text-gray-500 hover:text-gray-900"
+                        )}
+                      >
+                        {label}
+                      </button>
+                    );
+                  })}
                </div>
 
                <ScrollArea className="h-[600px] pr-4">
                   <div className="grid md:grid-cols-2 gap-4 pb-12">
-                    {PRICING_DATA.map(item => (
-                      <div key={item.id} className="p-6 bg-white rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-all space-y-4">
-                        <div>
-                          <p className="font-bold text-lg">{item.name}</p>
-                          <p className="text-xs text-gray-400 font-medium tracking-tight">{item.category}</p>
+                    {mergedPricingData.filter(item => {
+                      const matchesCategory = selectedType === 'All' || item.category === selectedType;
+                      const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase());
+                      return matchesCategory && matchesSearch;
+                    }).map(item => (
+                      <div key={item.id} className="p-6 bg-white rounded-3xl border border-gray-100 shadow-[0_4px_20px_rgba(0,0,0,0.02)] hover:shadow-[0_12px_24px_rgba(0,0,0,0.05)] transition-all duration-300 flex flex-col justify-between space-y-4">
+                        <div className="flex gap-4 items-start">
+                          <ServiceSymbol 
+                            name={item.name} 
+                            category={item.category} 
+                            className="w-16 h-16 rounded-2xl flex-shrink-0" 
+                            size={24} 
+                          />
+                          <div className="flex-1 min-w-0">
+                            <p className="font-bold text-lg text-gray-900 leading-tight break-words">{item.name}</p>
+                            <span className="inline-block mt-1 text-[10px] font-bold tracking-wider uppercase text-gray-400 bg-gray-50 px-2 py-0.5 rounded-lg border border-gray-100">{item.category}</span>
+                          </div>
                         </div>
                         <div className="grid grid-cols-1 gap-2">
                           {item.washIron && (
                             <button 
                               onClick={() => addToBasket(item, 'washIron')} 
-                              className="flex justify-between items-center px-4 py-2 bg-blue-50/50 hover:bg-blue-100 text-srm-blue rounded-xl text-xs font-bold transition-colors group"
+                              className="flex justify-between items-center px-4 py-2.5 bg-blue-50/40 hover:bg-blue-100 text-srm-blue rounded-xl text-xs font-bold transition-all group border border-blue-100/20"
                             >
-                              <span>Wash & Iron</span>
-                              <span className="flex items-center gap-1">₹{item.washIron} <Plus size={14} className="group-hover:scale-125 transition-transform" /></span>
+                              <span>Wash & Steam Iron</span>
+                              <span className="flex items-center gap-1 font-mono font-extrabold">
+                                {formatPrice(item.washIron)} 
+                                <Plus size={14} className="group-hover:scale-125 transition-transform ml-1" />
+                              </span>
                             </button>
                           )}
                           {item.dryClean && (
                             <button 
                               onClick={() => addToBasket(item, 'dryClean')} 
-                              className="flex justify-between items-center px-4 py-2 bg-rose-50/50 hover:bg-rose-100 text-srm-red rounded-xl text-xs font-bold transition-colors group"
+                              className="flex justify-between items-center px-4 py-2.5 bg-rose-50/40 hover:bg-rose-100 text-srm-red rounded-xl text-xs font-bold transition-all group border border-rose-100/20"
                             >
                               <span>Dry Cleaning</span>
-                              <span className="flex items-center gap-1">₹{item.dryClean} <Plus size={14} className="group-hover:scale-125 transition-transform" /></span>
+                              <span className="flex items-center gap-1 font-mono font-extrabold">
+                                {formatPrice(item.dryClean)} 
+                                <Plus size={14} className="group-hover:scale-125 transition-transform ml-1" />
+                              </span>
+                            </button>
+                          )}
+                          {item.steamIron && (
+                            <button 
+                              onClick={() => addToBasket(item, 'steamIron')} 
+                              className="flex justify-between items-center px-4 py-2.5 bg-slate-50 hover:bg-slate-100 text-gray-700 rounded-xl text-xs font-bold transition-all group border border-slate-200/50"
+                            >
+                              <span>Steam Iron Only</span>
+                              <span className="flex items-center gap-1 font-mono font-extrabold">
+                                {formatPrice(item.steamIron)} 
+                                <Plus size={14} className="group-hover:scale-125 transition-transform ml-1" />
+                              </span>
                             </button>
                           )}
                         </div>
                       </div>
                     ))}
+                    {mergedPricingData.filter(item => {
+                      const matchesCategory = selectedType === 'All' || item.category === selectedType;
+                      const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase());
+                      return matchesCategory && matchesSearch;
+                    }).length === 0 && (
+                      <div className="col-span-2 py-12 text-center text-gray-400 font-medium">
+                        No garments found matching "{searchQuery}"
+                      </div>
+                    )}
                   </div>
                </ScrollArea>
             </div>
@@ -230,15 +345,43 @@ export function BookingFlow({ setView }: BookingFlowProps) {
                              {['Noida', 'Greater Noida'].map(loc => (
                                <button 
                                  key={loc}
+                                 type="button"
                                  onClick={() => setDetails({...details, location: loc})}
                                  className={cn(
-                                   "py-4 rounded-2xl border-2 font-bold text-sm transition-all",
+                                   "py-4 rounded-2xl border-2 font-bold text-sm transition-all text-center flex flex-col items-center justify-center gap-1",
                                    details.location === loc ? "bg-srm-blue text-white border-srm-blue" : "bg-white text-gray-400 border-gray-100 hover:border-gray-200"
                                  )}
                                >
-                                 {loc}
+                                 <span>{loc === 'Noida' ? 'Noida (Sec-78)' : 'Greater Noida (Sec-1)'}</span>
+                                 <span className="text-[9px] opacity-75 font-medium block">
+                                    {loc === 'Noida' ? 'Mahagun Mart HQ' : 'Paramount Square'}
+                                  </span>
                                </button>
                              ))}
+                          </div>
+
+                          {/* Dynamic Outlet Detail cards */}
+                          <div className="p-4 rounded-2xl bg-gray-50 border border-gray-100 space-y-2 mt-3 text-left">
+                             <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Selected Processing Store</p>
+                             {details.location === 'Noida' ? (
+                                <div className="space-y-1">
+                                   <p className="text-xs font-bold text-gray-800 leading-normal">
+                                      Shop No. E, Lower Ground Floor, Mahagun Mart, Sec-78 Noida
+                                   </p>
+                                   <p className="text-[10px] text-srm-blue font-black uppercase tracking-wider">
+                                      📞 +91 98913 18340 | +91 97171 53137
+                                   </p>
+                                </div>
+                             ) : (
+                                <div className="space-y-1">
+                                   <p className="text-xs font-bold text-gray-800 leading-normal">
+                                      Shop No FF8A, Paramount City Square Paramount Emotions, Sector-1, Bisrakh Jalalpur (U.P.) 201318
+                                   </p>
+                                   <p className="text-[10px] text-srm-red font-black uppercase tracking-wider">
+                                      📞 +91 95602 08341 | +91 95604 08342
+                                   </p>
+                                </div>
+                             )}
                           </div>
                         </div>
 

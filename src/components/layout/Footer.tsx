@@ -6,9 +6,10 @@ import srmLogo from '../../assets/images/srm_logo_cleaned_1779214849760.png';
 interface FooterProps {
   makeAdmin: () => void;
   setView?: (view: 'home' | 'book' | 'tracking' | 'admin') => void;
+  onOpenModal: (type: 'history' | 'workshops' | 'franchise' | 'careers' | 'terms' | 'privacy') => void;
 }
 
-export function Footer({ makeAdmin, setView }: FooterProps) {
+export function Footer({ makeAdmin, setView, onOpenModal }: FooterProps) {
   const currentYear = new Date().getFullYear();
 
   const handleLogoClick = () => {
@@ -44,39 +45,65 @@ export function Footer({ makeAdmin, setView }: FooterProps) {
               </div>
            </div>
 
-           <div className="space-y-8">
-              <h4 className="text-xs font-black uppercase tracking-[0.2em] text-blue-400">CONTACT HUB</h4>
+           <div className="space-y-8 md:col-span-1">
+              <h4 className="text-xs font-black uppercase tracking-[0.2em] text-blue-400">OUR STORE HUBS</h4>
               <div className="space-y-6">
-                 <ContactItem 
-                   icon={<Phone size={18} />} 
-                   title="Priority Line" 
-                   desc="+91 99908 44437" 
-                   href="tel:+919990844437"
-                 />
-                 <ContactItem 
-                   icon={<Mail size={18} />} 
-                   title="Official Support" 
-                   desc="care@srmcleaners.in" 
-                   href="mailto:care@srmcleaners.in"
-                 />
-                 <ContactItem 
-                   icon={<Clock size={18} />} 
-                   title="Operations" 
-                   desc="Mon - Sun | 9AM - 8PM" 
-                 />
+                 {/* STORE 1 */}
+                 <div className="space-y-2 border-l-2 border-srm-blue pl-4">
+                    <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest">Noida Sec-78 (HQ)</p>
+                    <p className="text-xs text-gray-300 font-bold max-w-xs leading-relaxed">
+                       Shop No. E, Lower Ground Floor, Mahagun Mart, Sec-78 Noida
+                    </p>
+                    <div className="flex flex-col gap-1 text-xs text-gray-400 font-bold mt-1.5">
+                       <a href="tel:+919891318340" className="hover:text-blue-400 transition-colors flex items-center gap-1.5">
+                          <Phone size={12} /> +91 98913 18340
+                       </a>
+                       <a href="tel:+919717153137" className="hover:text-blue-400 transition-colors flex items-center gap-1.5">
+                          <Phone size={12} /> +91 97171 53137
+                       </a>
+                    </div>
+                 </div>
+
+                 {/* STORE 2 */}
+                 <div className="space-y-2 border-l-2 border-rose-500 pl-4">
+                    <p className="text-[10px] font-black text-rose-400 uppercase tracking-widest">Greater Noida Sec-1</p>
+                    <p className="text-xs text-gray-300 font-bold max-w-xs leading-relaxed">
+                       Shop No FF8A, Paramount City Square Paramount Emotions, Sector-1, Bisrakh Jalalpur (U.P.) 201318
+                    </p>
+                    <div className="flex flex-col gap-1 text-xs text-gray-400 font-bold mt-1.5">
+                       <a href="tel:+919560208341" className="hover:text-rose-400 transition-colors flex items-center gap-1.5">
+                          <Phone size={12} /> +91 95602 08341
+                       </a>
+                       <a href="tel:+919560408342" className="hover:text-rose-400 transition-colors flex items-center gap-1.5">
+                          <Phone size={12} /> +91 95604 08342
+                       </a>
+                    </div>
+                 </div>
+
+                 <div className="h-px bg-white/5 w-full" />
+
+                 {/* Operational information */}
+                 <div className="space-y-1 text-xs font-bold text-gray-400 pl-4">
+                    <p className="flex items-center gap-1.5">
+                       <Clock size={12} /> Mon - Sun | 9:00 AM - 8:00 PM
+                    </p>
+                    <p className="text-[9px] text-gray-500 uppercase tracking-wider">
+                       * Alternate Thursdays Closed
+                    </p>
+                 </div>
               </div>
            </div>
 
            <div className="space-y-8">
               <h4 className="text-xs font-black uppercase tracking-[0.2em] text-red-500">QUICK ACCESS</h4>
               <nav className="grid grid-cols-2 gap-4">
-                 <FooterLink label="Our History" />
-                 <FooterLink label="Workshops" />
-                 <FooterLink label="Franchise" />
-                 <FooterLink label="Careers" />
+                 <FooterLink label="Our History" onClick={() => onOpenModal('history')} />
+                 <FooterLink label="Workshops" onClick={() => onOpenModal('workshops')} />
+                 <FooterLink label="Franchise" onClick={() => onOpenModal('franchise')} />
+                 <FooterLink label="Careers" onClick={() => onOpenModal('careers')} />
                  <FooterLink label="Partner Log" onClick={makeAdmin} />
-                 <FooterLink label="Terms" />
-                 <FooterLink label="Privacy" />
+                 <FooterLink label="Terms" onClick={() => onOpenModal('terms')} />
+                 <FooterLink label="Privacy" onClick={() => onOpenModal('privacy')} />
               </nav>
            </div>
         </div>
