@@ -1,18 +1,21 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { 
   ShoppingBag, Users, IndianRupee, Truck, Calendar, 
   Search, Filter, MoreHorizontal, Download, ArrowUpRight,
   TrendingUp, Clock, CheckCircle2, AlertCircle, MapPin,
-  Check, Edit, RefreshCw, Sliders
+  Check, Edit, RefreshCw, Sliders, Plus, FileText, Trash2
 } from 'lucide-react';
 import { db, seedServices } from '../../lib/firebase';
-import { collection, query, where, orderBy, onSnapshot, doc, updateDoc, getDoc, setDoc } from 'firebase/firestore';
+import { collection, query, where, orderBy, onSnapshot, doc, updateDoc, getDoc, setDoc, deleteDoc } from 'firebase/firestore';
 import { format } from 'date-fns';
 import { PRICING_DATA } from '../../constants';
 import { ServiceSymbol, getServiceIcon } from '../ServiceSymbol';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
+import { Label } from '../ui/label';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
 import { Badge } from '../ui/badge';
@@ -33,6 +36,15 @@ export function AdminDashboard() {
   const [dbServices, setDbServices] = useState<any[]>([]);
   const [loadingAction, setLoadingAction] = useState<string | null>(null);
 
+  // New manual creation states
+  const [isAddingService, setIsAddingService] = useState(false);
+  const [newServiceName, setNewServiceName] = useState('');
+  const [newServiceCategory, setNewServiceCategory] = useState('Mens Wear');
+  const [customCategoryName, setCustomCategoryName] = useState('');
+  const [newWashIronPrice, setNewWashIronPrice] = useState('');
+  const [newDryCleanPrice, setNewDryCleanPrice] = useState('');
+  const [newSteamIronPrice, setNewSteamIronPrice] = useState('');
+
   useEffect(() => {
     const q = query(collection(db, 'services'));
     const unsub = onSnapshot(q, (snap) => {
@@ -44,11 +56,36 @@ export function AdminDashboard() {
   }, []);
 
   const mergedCatalog = useMemo(() => {
-    return PRICING_DATA.map(original => {
-      const dbItem = dbServices.find(item => item.id === original.id);
-      return dbItem ? { ...original, ...dbItem } : original;
+    const pricingMap = new Map(PRICING_DATA.map(item => [item.id, item]));
+    const dbMap = new Map(dbServices.map(item => [item.id, item]));
+
+    const result: any[] = [];
+    
+    PRICING_DATA.forEach(original => {
+      const dbItem = dbMap.get(original.id) as any;
+      if (!dbItem || !dbItem.deleted) {
+        result.push(dbItem ? { ...(original as any), ...(dbItem as any) } : original);
+      }
     });
+
+    dbServices.forEach(item => {
+      if (!pricingMap.has(item.id) && !item.deleted) {
+        result.push(item);
+      }
+    });
+
+    return result;
   }, [dbServices]);
+
+  const dynamicCategories = useMemo(() => {
+    const cats = new Set<string>(['Mens Wear', 'Womens Wear', 'Household & Kidswear', 'Other']);
+    mergedCatalog.forEach(item => {
+      if (item.category) {
+        cats.add(item.category);
+      }
+    });
+    return Array.from(cats);
+  }, [mergedCatalog]);
 
   const filteredCatalog = useMemo(() => {
     return mergedCatalog.filter(item => {
@@ -57,6 +94,187 @@ export function AdminDashboard() {
       return matchesCategory && matchesSearch;
     });
   }, [mergedCatalog, catalogCategory, catalogSearch]);
+
+  const resetNewServiceForm = () => {
+    setNewServiceName('');
+    setNewServiceCategory('Mens Wear');
+    setCustomCategoryName('');
+    setNewWashIronPrice('');
+    setNewDryCleanPrice('');
+    setNewSteamIronPrice('');
+  };
+
+  const handleCreateService = async () => {
+    if (!newServiceName.trim()) {
+      toast.error('Please specify a garment name.');
+      return;
+    }
+    
+    const categoryToSave = newServiceCategory === 'custom' ? customCategoryName.trim() : newServiceCategory;
+    if (!categoryToSave) {
+      toast.error('Please specify a valid category.');
+      return;
+    }
+
+    if (!newWashIronPrice && !newDryCleanPrice && !newSteamIronPrice) {
+      toast.error('Please supply at least one rate.');
+      return;
+    }
+
+    const slug = newServiceName.toLowerCase().replace(/[^a-z0-9]/g, '_').replace(/_+/g, '_').trim();
+    const uniqueId = `custom_${slug}_${Date.now()}`;
+
+    try {
+      const itemData: any = {
+        id: uniqueId,
+        name: newServiceName.trim(),
+        category: categoryToSave,
+      };
+
+      if (newWashIronPrice) itemData.washIron = parseInt(newWashIronPrice, 10);
+      if (newDryCleanPrice) itemData.dryClean = parseInt(newDryCleanPrice, 10);
+      if (newSteamIronPrice) itemData.steamIron = parseInt(newSteamIronPrice, 10);
+
+      await setDoc(doc(db, 'services', uniqueId), itemData);
+      toast.success(`Successfully added ${newServiceName} to ${categoryToSave}!`);
+      setIsAddingService(false);
+      resetNewServiceForm();
+    } catch (e) {
+      console.error("Error creating custom service:", e);
+      toast.error('Failed to register the new garment service to database.');
+    }
+  };
+
+  const handleDeleteService = async (serviceId: string) => {
+    if (!window.confirm('Are you sure you want to delete this service rate permanently from the catalog?')) {
+      return;
+    }
+    try {
+      if (serviceId.toLowerCase().startsWith('custom_')) {
+        await deleteDoc(doc(db, 'services', serviceId));
+      } else {
+        await setDoc(doc(db, 'services', serviceId), { deleted: true }, { merge: true });
+      }
+      toast.success('Service rate deleted successfully.');
+    } catch (e) {
+      console.error(e);
+      toast.error('Failed to delete service rate.');
+    }
+  };
+
+  const handleExportPDF = () => {
+    try {
+      const gDoc = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+      });
+
+      // Group mergedCatalog by Category
+      const categoriesGrouped: { [key: string]: any[] } = {};
+      mergedCatalog.forEach(item => {
+        const cat = item.category || 'Other';
+        if (!categoriesGrouped[cat]) {
+          categoriesGrouped[cat] = [];
+        }
+        categoriesGrouped[cat].push(item);
+      });
+
+      // Sort service items alphabetically in each category
+      Object.keys(categoriesGrouped).forEach(cat => {
+        categoriesGrouped[cat].sort((a, b) => a.name.localeCompare(b.name));
+      });
+
+      // Prepare table data
+      const tableRows: any[] = [];
+      let index = 1;
+
+      Object.entries(categoriesGrouped).forEach(([catName, items]) => {
+        items.forEach(item => {
+          tableRows.push([
+            index++,
+            catName.toUpperCase(),
+            item.name,
+            item.washIron ? `₹${item.washIron}/-` : '—',
+            item.dryClean ? `₹${item.dryClean}/-` : '—',
+            item.steamIron ? `₹${item.steamIron}/-` : '—'
+          ]);
+        });
+      });
+
+      // Title & Branding Header
+      gDoc.setFillColor(37, 99, 235); // SRM Blue
+      gDoc.rect(0, 0, 210, 35, 'F');
+
+      gDoc.setTextColor(255, 255, 255);
+      gDoc.setFont('helvetica', 'bold');
+      gDoc.setFontSize(20);
+      gDoc.text('SRM PREMIUM DRY CLEANERS', 15, 18);
+      
+      gDoc.setFont('helvetica', 'normal');
+      gDoc.setFontSize(9);
+      gDoc.text('NOIDA SECTORS OFFICIAL SERVICE RATE SHEET', 15, 26);
+
+      // Metadata info on right side
+      gDoc.setFontSize(8.5);
+      gDoc.text(`Generated: ${format(new Date(), 'dd MMM yyyy, hh:mm a')}`, 140, 16);
+      gDoc.text('Version: Real-Time Sync v1.4', 140, 22);
+      gDoc.text('Support Desk: Live Database Sync', 140, 28);
+
+      // Intro message
+      gDoc.setTextColor(71, 85, 105);
+      gDoc.setFontSize(9.5);
+      gDoc.setFont('helvetica', 'italic');
+      gDoc.text('This is Noida\'s official master rates table representing dynamic customer catalogs. Prices are inclusive of GST.', 15, 43);
+
+      // Run autoTable
+      autoTable(gDoc, {
+        startY: 48,
+        head: [['S.No', 'Category', 'Garment/Service Name', 'Wash & Steam Iron', 'Dry Cleaning', 'Steam Iron Only']],
+        body: tableRows,
+        theme: 'striped',
+        headStyles: {
+          fillColor: [37, 99, 235], // SRM Blue
+          textColor: [255, 255, 255],
+          fontSize: 9,
+          fontStyle: 'bold',
+          halign: 'left'
+        },
+        bodyStyles: {
+          fontSize: 8,
+          textColor: [51, 65, 85],
+          font: 'helvetica'
+        },
+        columnStyles: {
+          0: { cellWidth: 12 },
+          1: { cellWidth: 38 },
+          2: { cellWidth: 55 },
+          3: { cellWidth: 35 },
+          4: { cellWidth: 35 },
+          5: { cellWidth: 35 }
+        },
+        alternateRowStyles: {
+          fillColor: [248, 250, 252] // light slate
+        },
+        margin: { left: 15, right: 15 },
+        didDrawPage: (data: any) => {
+          // Footer watermark
+          const str = `Page ${data.pageNumber}`;
+          gDoc.setFontSize(8);
+          gDoc.setTextColor(148, 163, 184);
+          gDoc.setFont('helvetica', 'normal');
+          gDoc.text(str, gDoc.internal.pageSize.width - 25, gDoc.internal.pageSize.height - 10);
+          gDoc.text('SRM Dry Cleaners Corporate Office, Sector 1 Noida.', 15, gDoc.internal.pageSize.height - 10);
+        }
+      });
+
+      gDoc.save('srm_official_services_sheet.pdf');
+      toast.success('Successfully compiled services sheet into a PDF and started download!');
+    } catch (error) {
+      console.error("PDF generation failure:", error);
+      toast.error('Failed to generate PDF.');
+    }
+  };
 
   const handleUpdatePrice = async (serviceId: string, field: 'washIron' | 'dryClean' | 'steamIron', value: string | number) => {
     const actionKey = `${serviceId}-${field}`;
@@ -75,7 +293,7 @@ export function AdminDashboard() {
       if (docSnap.exists()) {
         await updateDoc(serviceRef, updateData);
       } else {
-        const item = PRICING_DATA.find(x => x.id === serviceId);
+        const item = mergedCatalog.find(x => x.id === serviceId);
         await setDoc(serviceRef, {
           ...item,
           ...updateData
@@ -424,14 +642,172 @@ export function AdminDashboard() {
                     </SelectTrigger>
                     <SelectContent className="rounded-xl font-bold text-xs uppercase">
                        <SelectItem value="all">ALL CATEGORIES</SelectItem>
-                       <SelectItem value="Mens Wear">MENS WEAR</SelectItem>
-                       <SelectItem value="Womens Wear">WOMENS WEAR</SelectItem>
-                       <SelectItem value="Household & Kidswear">HOUSEHOLD & KIDS</SelectItem>
-                       <SelectItem value="Other">SPECIAL SERVICES</SelectItem>
+                       {dynamicCategories.map(cat => (
+                          <SelectItem key={cat} value={cat}>{cat.toUpperCase()}</SelectItem>
+                       ))}
                     </SelectContent>
                  </Select>
               </div>
            </div>
+
+           {/* Catalog Action Toolbar */}
+           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 p-6 bg-white border border-gray-100 rounded-[32px] shadow-sm">
+              <div className="flex flex-wrap gap-3.5 w-full sm:w-auto mt-1">
+                 <Button 
+                    onClick={() => setIsAddingService(!isAddingService)} 
+                    className="bg-srm-blue hover:bg-blue-600 text-white rounded-2xl h-11 px-6 font-bold flex items-center gap-2 shadow-sm text-xs uppercase tracking-wider transition-all"
+                 >
+                    <Plus size={16} /> Add Garment / Category
+                 </Button>
+                 <Button 
+                    onClick={handleExportPDF}
+                    variant="outline"
+                    className="border-2 rounded-2xl h-11 px-6 font-bold flex items-center gap-2 hover:bg-gray-50 text-xs uppercase tracking-wider transition-all"
+                  >
+                    <FileText size={16} className="text-rose-500" /> Export Services PDF
+                 </Button>
+              </div>
+              <p className="text-xs text-gray-400 font-extrabold tracking-widest uppercase">CATALOG REFCOUNT: {mergedCatalog.length} ITEMS</p>
+           </div>
+
+           {/* Expandable Manual Creation Card */}
+           <AnimatePresence>
+              {isAddingService && (
+                 <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="overflow-hidden"
+                 >
+                    <Card className="rounded-[32px] p-8 border-2 border-srm-blue/20 bg-[#f8fafc]/30 shadow-md">
+                       <div className="flex justify-between items-start mb-6 border-b border-slate-100 pb-4">
+                          <div className="text-left">
+                             <h4 className="font-black text-xl text-slate-900 uppercase tracking-tight">Add New Garment / Service Rate</h4>
+                             <p className="text-xs text-slate-500 font-medium">Create a new garment service record in central cloud database</p>
+                          </div>
+                          <Button 
+                             variant="ghost" 
+                             size="sm" 
+                             onClick={() => setIsAddingService(false)} 
+                             className="rounded-full w-8 h-8 p-0"
+                          >
+                             ✕
+                          </Button>
+                       </div>
+
+                       <div className="grid md:grid-cols-12 gap-6 text-left">
+                          <div className="col-span-12 md:col-span-4 space-y-1.5 text-left">
+                             <Label className="text-xs font-black uppercase tracking-wider text-slate-700">Garment / Service Name</Label>
+                             <Input 
+                                placeholder="e.g. Silk Dupatta, Designer Sherwani"
+                                value={newServiceName}
+                                onChange={(e) => setNewServiceName(e.target.value)}
+                                className="h-11 rounded-xl bg-white border-gray-200"
+                             />
+                          </div>
+
+                          <div className="col-span-12 md:col-span-4 space-y-1.5 text-left">
+                             <Label className="text-xs font-black uppercase tracking-wider text-slate-700">Select Category</Label>
+                             <Select 
+                                value={newServiceCategory} 
+                                onValueChange={(val) => {
+                                   setNewServiceCategory(val);
+                                   if (val !== 'custom') {
+                                      setCustomCategoryName('');
+                                   }
+                                }}
+                             >
+                                <SelectTrigger className="h-11 rounded-xl bg-white border-gray-200 font-bold text-xs uppercase font-sans">
+                                   <SelectValue placeholder="Choose Category" />
+                                </SelectTrigger>
+                                <SelectContent className="rounded-xl font-bold text-xs uppercase font-sans">
+                                   {dynamicCategories.map(cat => (
+                                      <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                                   ))}
+                                   <SelectItem value="custom" className="text-srm-blue font-black font-sans">+ Create New Category...</SelectItem>
+                                </SelectContent>
+                             </Select>
+                          </div>
+
+                          {newServiceCategory === 'custom' && (
+                             <div className="col-span-12 md:col-span-4 space-y-1.5 animate-fade-in text-left">
+                                <Label className="text-xs font-black uppercase tracking-wider text-srm-blue">Custom Category Name</Label>
+                                <Input 
+                                   placeholder="e.g. Traditional Wear, Athleisure"
+                                   value={customCategoryName}
+                                   onChange={(e) => setCustomCategoryName(e.target.value)}
+                                   className="h-11 rounded-xl bg-white border-srm-blue/40"
+                                />
+                             </div>
+                          )}
+
+                          <div className="col-span-12 h-px bg-slate-150 my-2" />
+
+                          <div className="col-span-12 md:col-span-4 space-y-1.5 text-left">
+                             <Label className="text-xs font-black uppercase tracking-wider text-slate-500 font-sans font-sans">Wash & Steam Iron Price (Optional)</Label>
+                             <div className="relative flex items-center">
+                                <span className="absolute left-3.5 text-xs font-bold text-gray-400 font-mono">₹</span>
+                                <Input 
+                                   type="number"
+                                   placeholder="—"
+                                   value={newWashIronPrice}
+                                   onChange={(e) => setNewWashIronPrice(e.target.value)}
+                                   className="h-11 pl-8 rounded-xl bg-white border-gray-200"
+                                />
+                             </div>
+                          </div>
+
+                          <div className="col-span-12 md:col-span-4 space-y-1.5 text-left">
+                             <Label className="text-xs font-black uppercase tracking-wider text-slate-500 font-sans">Dry Cleaning Price (Optional)</Label>
+                             <div className="relative flex items-center">
+                                <span className="absolute left-3.5 text-xs font-bold text-gray-400 font-mono">₹</span>
+                                <Input 
+                                   type="number"
+                                   placeholder="—"
+                                   value={newDryCleanPrice}
+                                   onChange={(e) => setNewDryCleanPrice(e.target.value)}
+                                   className="h-11 pl-8 rounded-xl bg-white border-gray-200"
+                                />
+                             </div>
+                          </div>
+
+                          <div className="col-span-12 md:col-span-4 space-y-1.5 text-left">
+                             <Label className="text-xs font-black uppercase tracking-wider text-slate-500 font-sans">Steam Iron Only Price (Optional)</Label>
+                             <div className="relative flex items-center">
+                                <span className="absolute left-3.5 text-xs font-bold text-gray-400 font-mono">₹</span>
+                                <Input 
+                                   type="number"
+                                   placeholder="—"
+                                   value={newSteamIronPrice}
+                                   onChange={(e) => setNewSteamIronPrice(e.target.value)}
+                                   className="h-11 pl-8 rounded-xl bg-white border-gray-200"
+                                 />
+                              </div>
+                           </div>
+
+                           <div className="col-span-12 flex justify-end gap-3 pt-4 border-t border-slate-150 mt-4">
+                              <Button 
+                                 variant="ghost" 
+                                 onClick={() => {
+                                    setIsAddingService(false);
+                                    resetNewServiceForm();
+                                 }}
+                                 className="rounded-xl h-11 font-bold text-xs uppercase"
+                              >
+                                 Cancel
+                              </Button>
+                              <Button 
+                                 onClick={handleCreateService}
+                                 className="bg-gradient-to-r from-srm-blue to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-xl h-11 font-bold uppercase text-xs tracking-wider"
+                              >
+                                 Publish Service
+                              </Button>
+                           </div>
+                        </div>
+                     </Card>
+                  </motion.div>
+               )}
+            </AnimatePresence>
 
            {/* Rate editing grids */}
            {filteredCatalog.length === 0 ? (
@@ -445,6 +821,7 @@ export function AdminDashboard() {
                        key={item.id} 
                        item={item} 
                        onSave={handleUpdatePrice} 
+                       onDelete={handleDeleteService}
                        loadingAction={loadingAction}
                     />
                  ))}
@@ -457,7 +834,7 @@ export function AdminDashboard() {
 }
 
 /* Custom interactive nested widget to encapsulate change states safely to keep high-frequency inputs responsive */
-function CatalogServiceCard({ item, onSave, loadingAction }: { key?: any, item: any, onSave: (id: string, field: 'washIron' | 'dryClean' | 'steamIron', value: string | number) => Promise<void>, loadingAction: string | null }) {
+function CatalogServiceCard({ item, onSave, onDelete, loadingAction }: { key?: any, item: any, onSave: (id: string, field: 'washIron' | 'dryClean' | 'steamIron', value: string | number) => Promise<void>, onDelete?: (id: string) => Promise<void>, loadingAction: string | null }) {
   const [washIron, setWashIron] = useState(item.washIron ?? '');
   const [dryClean, setDryClean] = useState(item.dryClean ?? '');
   const [steamIron, setSteamIron] = useState(item.steamIron ?? '');
@@ -503,6 +880,16 @@ function CatalogServiceCard({ item, onSave, loadingAction }: { key?: any, item: 
              className="h-28 rounded-2xl w-full" 
              size={32} 
           />
+          {onDelete && (
+             <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => onDelete(item.id)}
+                className="absolute top-6 right-6 rounded-full w-8 h-8 p-0 bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-600 transition-colors shadow-md z-10"
+             >
+                <Trash2 size={13} strokeWidth={2.5} />
+              </Button>
+          )}
        </div>
        
        <div className="p-6 flex-1 flex flex-col justify-between space-y-6">

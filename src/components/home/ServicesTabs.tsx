@@ -32,7 +32,6 @@ interface ServicesTabsProps {
 }
 
 export function ServicesTabs({ setView, selectedCategory, setSelectedCategory }: ServicesTabsProps) {
-  const categories = ['Mens Wear', 'Womens Wear', 'Household & Kidswear', 'Other'];
   const [dbServices, setDbServices] = useState<any[]>([]);
 
   useEffect(() => {
@@ -48,18 +47,36 @@ export function ServicesTabs({ setView, selectedCategory, setSelectedCategory }:
   }, []);
 
   const mergedPricingData = useMemo(() => {
-    if (dbServices.length === 0) return PRICING_DATA;
-    return PRICING_DATA.map(original => {
-      const dbItem = dbServices.find(item => item.id === original.id);
-      if (dbItem) {
-        return {
-          ...original,
-          ...dbItem
-        };
+    const pricingMap = new Map(PRICING_DATA.map(item => [item.id, item]));
+    const dbMap = new Map(dbServices.map(item => [item.id, item]));
+
+    const result: any[] = [];
+    
+    PRICING_DATA.forEach(original => {
+      const dbItem = dbMap.get(original.id) as any;
+      if (!dbItem || !dbItem.deleted) {
+        result.push(dbItem ? { ...(original as any), ...(dbItem as any) } : original);
       }
-      return original;
     });
-  }, [dbServices, dbServices.length]);
+
+    dbServices.forEach(item => {
+      if (!pricingMap.has(item.id) && !item.deleted) {
+        result.push(item);
+      }
+    });
+
+    return result;
+  }, [dbServices]);
+
+  const categories = useMemo(() => {
+    const cats = new Set<string>(['Mens Wear', 'Womens Wear', 'Household & Kidswear', 'Other']);
+    dbServices.forEach(item => {
+      if (item.category) {
+        cats.add(item.category);
+      }
+    });
+    return Array.from(cats);
+  }, [dbServices]);
 
   return (
     <section id="services" className="py-32 px-6">

@@ -56,18 +56,36 @@ export function BookingFlow({ setView }: BookingFlowProps) {
   }, []);
 
   const mergedPricingData = useMemo(() => {
-    if (dbServices.length === 0) return PRICING_DATA;
-    return PRICING_DATA.map(original => {
-      const dbItem = dbServices.find(item => item.id === original.id);
-      if (dbItem) {
-        return {
-          ...original,
-          ...dbItem
-        };
+    const pricingMap = new Map(PRICING_DATA.map(item => [item.id, item]));
+    const dbMap = new Map(dbServices.map(item => [item.id, item]));
+
+    const result: any[] = [];
+    
+    PRICING_DATA.forEach(original => {
+      const dbItem = dbMap.get(original.id) as any;
+      if (!dbItem || !dbItem.deleted) {
+        result.push(dbItem ? { ...(original as any), ...(dbItem as any) } : original);
       }
-      return original;
     });
-  }, [dbServices, dbServices.length]);
+
+    dbServices.forEach(item => {
+      if (!pricingMap.has(item.id) && !item.deleted) {
+        result.push(item);
+      }
+    });
+
+    return result;
+  }, [dbServices]);
+
+  const categories = useMemo(() => {
+    const cats = new Set<string>(['Mens Wear', 'Womens Wear', 'Household & Kidswear', 'Other']);
+    dbServices.forEach(item => {
+      if (item.category) {
+        cats.add(item.category);
+      }
+    });
+    return ['All', ...Array.from(cats)];
+  }, [dbServices]);
 
   const addToBasket = (item: ServiceItem, type: 'washIron' | 'dryClean' | 'steamIron') => {
     const rawPrice = item[type];
@@ -173,10 +191,10 @@ export function BookingFlow({ setView }: BookingFlowProps) {
                   </div>
                </div>
 
-               {/* Responsive Filter Ribbons */}
-               <div className="flex flex-wrap gap-1.5 p-1 bg-gray-100/50 rounded-2xl border border-gray-200/45 w-fit">
-                  {['All', 'Mens Wear', 'Womens Wear', 'Household & Kidswear', 'Other'].map(cat => {
-                    const label = cat === 'Household & Kidswear' ? 'Household' : cat === 'Mens Wear' ? 'Mens' : cat === 'Womens Wear' ? 'Womens' : cat;
+                {/* Responsive Filter Ribbons */}
+                <div className="flex flex-wrap gap-1.5 p-1 bg-gray-100/50 rounded-2xl border border-gray-200/45 w-fit">
+                   {categories.map(cat => {
+                     const label = cat === 'Household & Kidswear' ? 'Household' : cat === 'Mens Wear' ? 'Mens' : cat === 'Womens Wear' ? 'Womens' : cat;
                     return (
                       <button
                         key={cat}
