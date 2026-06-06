@@ -1,0 +1,14 @@
+# robots.txt for srmdrycleaners.com
+# Optimized to index public content and protect sensitive user panels
+
+User-agent: *
+Allow: /
+
+# Prevent indexation of dynamic app routes and account pages
+Disallow: /admin
+Disallow: /admin/
+Disallow: /dashboard
+Disallow: /dashboard/
+
+# Specify the corresponding structured XML sitemap location
+Sitemap: https://srmdrycleaners.com/sitemap.xml
