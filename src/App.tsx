@@ -19,6 +19,7 @@ import { ProcessShowcase } from './components/home/ProcessShowcase';
 import { FeatureStats } from './components/home/FeatureStats';
 import { Testimonials } from './components/home/Testimonials';
 import { FaqSection } from './components/home/FaqSection';
+import { SeoLocationsAndGuides } from './components/home/SeoLocationsAndGuides';
 import { AppPromo } from './components/home/AppPromo';
 import { BookingFlow } from './components/booking/BookingFlow';
 import { TrackingDashboard } from './components/tracking/TrackingDashboard';
@@ -115,6 +116,7 @@ export default function App() {
               <Testimonials />
               <AppPromo />
               <FaqSection />
+              <SeoLocationsAndGuides setView={setView} />
             </motion.div>
           )}
 

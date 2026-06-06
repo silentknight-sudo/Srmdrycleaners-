@@ -12,6 +12,7 @@ import { Card, CardContent } from '../ui/card';
 import { toast } from 'sonner';
 import { cn } from '../../lib/utils';
 import { Skeleton } from '../ui/skeleton';
+import { InteractiveOrderStepper } from './InteractiveOrderStepper';
 
 export function TrackingDashboard() {
   const { user } = useAuth();
@@ -150,24 +151,8 @@ export function TrackingDashboard() {
                          </div>
                       </div>
 
-                      {/* Progress Visualizer */}
-                      <div className="space-y-6">
-                         <div className="relative h-2 bg-gray-100 rounded-full overflow-hidden">
-                            <motion.div 
-                               initial={{ width: 0 }}
-                               animate={{ width: `${getStatusPercent(order.status)}%` }}
-                               transition={{ duration: 1.5, ease: "easeOut" }}
-                               className="absolute h-full srm-gradient rounded-full"
-                            />
-                         </div>
-                         <div className="grid grid-cols-5 gap-2">
-                            <ProgressPoint label="Ordered" active={true} />
-                            <ProgressPoint label="Picked" active={['picked', 'processing', 'out_for_delivery', 'delivered'].includes(order.status)} />
-                            <ProgressPoint label="Processing" active={['processing', 'out_for_delivery', 'delivered'].includes(order.status)} />
-                            <ProgressPoint label="Transit" active={['out_for_delivery', 'delivered'].includes(order.status)} />
-                            <ProgressPoint label="Delivered" active={order.status === 'delivered'} />
-                         </div>
-                      </div>
+                      {/* Progress Visualizer with Interactive Lifecycle Stepper */}
+                      <InteractiveOrderStepper orderId={order.id} currentStatus={order.status} />
                    </div>
                    
                    {/* Simplified Item Preview */}

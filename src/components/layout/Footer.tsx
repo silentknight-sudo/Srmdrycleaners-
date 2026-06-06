@@ -133,6 +133,14 @@ export function Footer({ makeAdmin, setView, onOpenModal }: FooterProps) {
            </div>
         </div>
 
+        {/* SEO Keyword & Location Anchor Copy */}
+        <div className="pt-12 border-t border-white/5 space-y-4 text-left">
+           <h5 className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-400">SRM Drycleaners — Noida Local Coverage</h5>
+           <p className="text-[11px] font-semibold text-gray-500 leading-relaxed uppercase tracking-wider">
+              SRM Dry Cleaners is the premier destination for organic <strong className="text-gray-300 font-bold">dry cleaning</strong> and professional <strong className="text-gray-300 font-bold">drycleaning service near me</strong> in Noida. Armed with automated German processing machinery and hypoallergenic silicone solvents, <strong className="text-gray-300 font-bold font-sans">srm drycleaners</strong> delivers five-star garment care right to your doorstep. Looking for premium <strong className="text-gray-300 font-bold font-sans">srm laundry services near me</strong>? We process designer silk sarees, corporate workwear, leather sneakers, delicate winter jackets, carpets, and household curtains with curated, scheduled pickup and express delivery inside Noida Sector 15, Sector 50, Sector 62, Sector 137, Noida Extension (Greater Noida West), and Expressway communities.
+           </p>
+        </div>
+
         {/* Bottom Bar */}
         <div className="pt-12 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-6">
            <p className="text-xs font-bold text-gray-500 uppercase tracking-widest">
